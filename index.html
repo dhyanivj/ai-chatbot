@@ -100,8 +100,20 @@
                     if (!question) return; // Do nothing if the question is empty
 
 
-                    // Add question to chat history
-                    addMessageToChat("question", question);
+                    // / Create a new chat message element for the question
+                    const chatMessagesContainer = document.getElementById('chat-messages');
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'chat-message-sent';
+                    questionDiv.textContent = question;
+                    chatMessagesContainer.appendChild(questionDiv);
+
+                    // Scroll to the bottom of the chat messages container
+                    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+
+                    // Clear the input field
+                    document.getElementById("textInput").value = '';
+
+                    // Show typing animation
                     document.querySelector('.typing').style.display = 'block';
 
                     try {
@@ -109,19 +121,28 @@
                         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
                         const result = await model.generateContent(question);
                         const response = await result.response;
-                        const text = await response.text();
+                        const text = await response.text();// Placeholder for the actual answer
+
+                        // Create a new chat message element for the answer
+                        const answerDiv = document.createElement('div');
+                        answerDiv.className = 'chat-message-received';
+                        answerDiv.textContent = text;
+                        chatMessagesContainer.appendChild(answerDiv);
 
                         // Add answer to chat history
                         addMessageToChat("answer", text);
                     } catch (error) {
                         console.error("An error occurred:", error);
-                        addMessageToChat("answer", "Error fetching response.");
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'chat-message-received';
+                        errorDiv.textContent = "Error fetching response.";
+                        chatMessagesContainer.appendChild(errorDiv);
                     }
                     document.querySelector('.typing').style.display = 'none';
 
-                    // Clear the input field and render chat
-                    document.getElementById("textInput").value = '';
-                    renderChat();
+                    document.querySelector('.typing').style.display = 'none';
+                    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+
                 }
 
 
