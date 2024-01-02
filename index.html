@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bBot UI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+</head>
+
+<body>
+    <div class="title">
+        <div>
+            <div id="chatbot" class="main-card collapsed">
+                <button id="chatbot_toggle">
+                    <img id="chat-icon" src="./images/chatbot-icon.gif" alt="Chat Icon"
+                        class="closeBoticon bottom-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                        style="display:none; color: rgb(255, 255, 255); height: 30px; margin-top: 12px;">
+                        <path d="M0 0h24v24H0V0z" fill="none" />
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                    </svg>
+                </button>
+                <div class="main-title">
+                    <div>
+                        <object data="./images/chatbot-icon.svg" type="image/svg+xml"></object>
+                    </div>
+                    <span> Ai Bot</span>
+
+                </div>
+                <div class="chat-area" id="message-box">
+                    <div class="top-ques">
+                        <img src="./images/top-ques-icon.svg" alt="trending-icon" class="topQues-icon">
+                        <div> Top 5 asked questions</div>
+
+                        <button id="clearChatButton"><i class="fa fa-bitbucket"></i></button>
+
+                    </div>
+                    <div class="side-icons">
+                        <img src="./images/phone_icon.svg" alt="phone icon">
+                        <img src="./images/mail_icon.svg" alt="mail icon">
+                    </div>
+                    <div class="chat-message-received">Hi, Its great to see you! 👋 <br>
+                        What would you like to explore?</div>
+                    <div id="chat-messages"></div>
+                </div>
+                <div class="typing">
+                    <img src="./images/typing-animation.gif" alt="typing animation">
+                </div>
+
+                <div class="input-div">
+                    <form id="queryForm">
+                        <input type="text" name="text" id="textInput" class="input-message">
+                        <button class="input-send" type="button" id="submitButton">
+                            <svg style="width:24px;height:24px;">
+                                <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <!-- AIzaSyAOIbsQ4g1N--gB8202hLiITSYNKOtFjAQ -->
+
+            <script src="./script.js"></script>
+            <script type="importmap">
+                {
+                  "imports": {
+                    "@google/generative-ai": "https://esm.run/@google/generative-ai"
+                  }
+                }
+              </script>
+            <script type="module">
+                import { GoogleGenerativeAI } from "@google/generative-ai";
+
+                // Initialize your API key
+                const apiKey = 'AIzaSyAOIbsQ4g1N--gB8202hLiITSYNKOtFjAQ'; // Securely handle your API key
+                const genAI = new GoogleGenerativeAI(apiKey);
+
+                document.addEventListener("DOMContentLoaded", () => {
+                    loadChatHistory();
+                    attachEventListeners();
+                });
+
+                function attachEventListeners() {
+                    const submitButton = document.getElementById("submitButton");
+                    const textInput = document.getElementById("textInput");
+
+                    submitButton.addEventListener("click", () => sendMessage());
+                    textInput.addEventListener("keyup", (event) => {
+                        if (event.keyCode === 13) { // Check if Enter key is pressed
+                            event.preventDefault(); // Prevent the default action to avoid form submission
+                            sendMessage();
+                        }
+                    });
+                }
+                async function sendMessage() {
+                    const question = document.getElementById("textInput").value.trim();
+                    if (!question) return; // Do nothing if the question is empty
+
+                    // Add question to chat history
+                    addMessageToChat("question", question);
+
+                    try {
+                        // Call to Google Generative AI
+                        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+                        const result = await model.generateContent(question);
+                        const response = await result.response;
+                        const text = await response.text();
+
+                        // Add answer to chat history
+                        addMessageToChat("answer", text);
+                    } catch (error) {
+                        console.error("An error occurred:", error);
+                        addMessageToChat("answer", "Error fetching response.");
+                    }
+
+                    // Clear the input field and render chat
+                    document.getElementById("textInput").value = '';
+                    renderChat();
+                }
+
+
+                let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+
+                function addMessageToChat(type, content) {
+                    chatHistory.push({ type, content });
+                    saveChatHistory(); // Save updated chat history to localStorage
+                }
+
+                function renderChat() {
+                    const chatMessagesContainer = document.getElementById('chat-messages');
+                    chatMessagesContainer.innerHTML = ''; // Clear only the chat messages
+
+                    chatHistory.forEach(msg => {
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = msg.type === 'question' ? 'chat-message-sent' : 'chat-message-received';
+                        msgDiv.innerHTML = msg.content;
+                        chatMessagesContainer.appendChild(msgDiv);
+                    });
+                    // Scroll to the bottom of the chat messages container
+                    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+                }
+
+                function saveChatHistory() {
+                    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+                }
+
+                function loadChatHistory() {
+                    if (chatHistory) {
+                        renderChat();
+                    }
+                }
+                document.getElementById("clearChatButton").addEventListener("click", () => {
+                    clearChatHistory();
+                });
+                function clearChatHistory() {
+                    chatHistory = []; // Reset the chat history array
+                    localStorage.removeItem('chatHistory'); // Remove chat history from localStorage
+                    renderChat(); // Re-render the chat UI to show the cleared chat
+                    // chatBox.innerHTML = '';
+                }
+
+            </script>
+
+</body>
+
+</html>
