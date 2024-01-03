@@ -32,13 +32,6 @@ chatbotToggle.onclick = function() {
 // end of toggle 
 
 function send() {
-  // Show typing animation
-  document.querySelector('.typing').style.display = 'block';
-
-  // Hide typing animation after 2500ms
-  setTimeout(function() {
-      document.querySelector('.typing').style.display = 'none';
-  }, 2500);
 
   if (running == true) return;
 
