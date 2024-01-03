@@ -17,12 +17,7 @@
                 <button id="chatbot_toggle">
                     <img id="chat-icon" src="./images/chatbot-icon.gif" alt="Chat Icon"
                         class="closeBoticon bottom-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                        style="display:none; color: rgb(255, 255, 255); height: 30px; margin-top: 12px;">
-                        <path d="M0 0h24v24H0V0z" fill="none" />
-                        <path
-                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
-                    </svg>
+                   <div class="display:none; color: rgb(255, 255, 255); font-size: 17px;"><i class="fa fa-close"></i></div>
                 </button>
                 <div class="main-title">
                     <div>
@@ -53,7 +48,7 @@
 
                 <div class="input-div">
                     <form id="queryForm">
-                        <input type="text" id="textInput" class="input-message">
+                        <input type="text" id="textInput" class="input-message" placeholder="Type your question...">
                         <button type="submit" id="submitButton" class="input-send">
                             <svg style="width:24px;height:24px;">
                                 <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
