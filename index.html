@@ -62,96 +62,99 @@
             <script src="./script.js"></script>
             <script type="importmap">
                 {
-                  "imports": {
-                    "@google/generative-ai": "https://esm.run/@google/generative-ai"
-                  }
+                    "imports": {
+                        "@google/generative-ai": "https://esm.run/@google/generative-ai"
+                    }
                 }
-              </script>
+            </script>
             <script type="module">
                 import { GoogleGenerativeAI } from "@google/generative-ai";
-
-                // Initialize your API key
-                const apiKey = 'AIzaSyAOIbsQ4g1N--gB8202hLiITSYNKOtFjAQ'; // Securely handle your API key
+            
+                const apiKey = 'AIzaSyAOIbsQ4g1N--gB8202hLiITSYNKOtFjAQ'; // Replace with your actual API key
                 const genAI = new GoogleGenerativeAI(apiKey);
-
+            
                 document.addEventListener("DOMContentLoaded", () => {
                     loadChatHistory();
                     attachEventListeners();
                 });
-
+            
+                let chat;
+                let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+            
                 function attachEventListeners() {
                     const form = document.getElementById("queryForm");
-
+            
                     if (form) {
-                        form.addEventListener("submit", (event) => {
+                        form.addEventListener("submit", async (event) => {
                             event.preventDefault(); // Prevent the default form submission
-                            sendMessage();
+                            await sendMessage();
                         });
                     }
                 }
-
+            
                 async function sendMessage() {
-                    const question = document.getElementById("textInput").value.trim();
-                    if (!question) return; // Do nothing if the question is empty
-
-
-                    // / Create a new chat message element for the question
+                    const userInput = document.getElementById("textInput").value.trim();
+            
+                    if (!userInput) return; // Do nothing if the question is empty
+            
                     const chatMessagesContainer = document.getElementById('chat-messages');
-                    const questionDiv = document.createElement('div');
-                    questionDiv.className = 'chat-message-sent';
-                    questionDiv.textContent = question;
-                    chatMessagesContainer.appendChild(questionDiv);
-
+                    const userMessageDiv = document.createElement('div');
+                    userMessageDiv.className = 'chat-message-sent';
+                    userMessageDiv.textContent = userInput;
+                    chatMessagesContainer.appendChild(userMessageDiv);
+            
                     // Scroll to the bottom of the chat messages container
                     chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-
-                    // Clear the input field
-                    document.getElementById("textInput").value = '';
-
-                    // Show typing animation
+            
+                    document.getElementById("textInput").value = ''; // Clear the input field
+            
                     document.querySelector('.typing').style.display = 'block';
-
+            
                     try {
-                        // Call to Google Generative AI
-                        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-                        const result = await model.generateContent(question);
+                        if (!chat) {
+                            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+                            chat = model.startChat({
+                                history: [],
+                                generationConfig: {
+                                    maxOutputTokens: 100,
+                                },
+                            });
+                        }
+            
+                        const result = await chat.sendMessage(userInput);
                         const response = await result.response;
-                        const text = await response.text();// Placeholder for the actual answer
-
-                        // Create a new chat message element for the answer
-                        const answerDiv = document.createElement('div');
-                        answerDiv.className = 'chat-message-received';
-                        answerDiv.textContent = text;
-                        chatMessagesContainer.appendChild(answerDiv);
-
-                        // Add answer to chat history
+                        const text = await response.text();
+            
+                        const chatMessageDiv = document.createElement('div');
+                        chatMessageDiv.className = 'chat-message-received';
+                        chatMessageDiv.textContent = text;
+                        chatMessagesContainer.appendChild(chatMessageDiv);
+            
                         addMessageToChat("answer", text);
                     } catch (error) {
                         console.error("An error occurred:", error);
+            
                         const errorDiv = document.createElement('div');
                         errorDiv.className = 'chat-message-received';
                         errorDiv.textContent = "Error fetching response.";
                         chatMessagesContainer.appendChild(errorDiv);
                     }
+            
                     document.querySelector('.typing').style.display = 'none';
-
-                    document.querySelector('.typing').style.display = 'none';
+            
+                    // Scroll to the bottom of the chat messages container
                     chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-
                 }
-
-
-                let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
-
+            
                 function addMessageToChat(type, content) {
                     chatHistory.push({ type, content });
                     saveChatHistory(); // Save updated chat history to localStorage
                 }
-
+            
                 function renderChat() {
                     const chatMessagesContainer = document.getElementById('chat-messages');
                     chatMessagesContainer.innerHTML = ''; // Clear only the chat messages
-
+            
                     chatHistory.forEach(msg => {
                         const msgDiv = document.createElement('div');
                         msgDiv.className = msg.type === 'question' ? 'chat-message-sent' : 'chat-message-received';
@@ -161,28 +164,29 @@
                     // Scroll to the bottom of the chat messages container
                     chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
                 }
-
+            
                 function saveChatHistory() {
                     localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
                 }
-
+            
                 function loadChatHistory() {
                     if (chatHistory) {
                         renderChat();
                     }
                 }
+            
                 document.getElementById("clearChatButton").addEventListener("click", () => {
                     clearChatHistory();
                 });
+            
                 function clearChatHistory() {
                     chatHistory = []; // Reset the chat history array
                     localStorage.removeItem('chatHistory'); // Remove chat history from localStorage
                     renderChat(); // Re-render the chat UI to show the cleared chat
                     // chatBox.innerHTML = '';
                 }
-
             </script>
-
+            
 </body>
 
 </html>
